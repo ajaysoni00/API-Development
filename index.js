@@ -1,6 +1,5 @@
 import express from "express";
 const app = express();
-import mongoose from "mongoose";
 import studentRoutes from "./routes/students.routes.js";
 import connectDB from "./config/database.js";
 connectDB();
