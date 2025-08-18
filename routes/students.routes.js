@@ -31,15 +31,41 @@ const uploads = multer({
   },
 });
 
-//Get all Students
+// Get all Students (search only by first_name + last_name)
 router.get("/", async (req, res) => {
   try {
-    const studentsData = await Student.find();
+    const search = req.query.search?.trim() || "";
+    let query = {};
+
+    if (search) {
+      const searchParts = search.split(" ").filter(Boolean);
+
+      if (searchParts.length === 1) {
+        // One word → match either first_name OR last_name
+        query = {
+          $or: [
+            { first_name: { $regex: search, $options: "i" } },
+            { last_name: { $regex: search, $options: "i" } },
+          ],
+        };
+      } else if (searchParts.length >= 2) {
+        // Two words → match first_name + last_name together
+        query = {
+          $and: [
+            { first_name: { $regex: searchParts[0], $options: "i" } },
+            { last_name: { $regex: searchParts[1], $options: "i" } },
+          ],
+        };
+      }
+    }
+
+    const studentsData = await Student.find(query);
     res.json(studentsData);
   } catch (error) {
     res.status(500).json({ message: error.message });
   }
 });
+
 //Get a single Student
 router.get("/:id", async (req, res) => {
   try {
