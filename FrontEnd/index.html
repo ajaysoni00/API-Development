@@ -176,7 +176,7 @@
               ></button>
             </div>
             <div class="modal-body">
-              <input type="hidden" id="editStudentId" />
+              <input type="hidden" id="editStudentId" name="id" />
               <div class="mb-2">
                 <input
                   type="text"
@@ -255,18 +255,25 @@
     ></script>
     <script>
       const apiURL = "http://localhost:3000/api/students";
+      let currentPage, currentSearch;
 
       //Fetch all the students from the API
-      async function fetchStudents(search = "") {
+      async function fetchStudents(search = "", page = 1) {
+        currentSearch = search;
+        currentPage = page;
+        let limit = 7;
         const result = await fetch(
-          `${apiURL}?search=${encodeURIComponent(search)}`
+          `${apiURL}?search=${encodeURIComponent(
+            search
+          )}&page=${encodeURIComponent(page)}&limit=${limit}`
         );
         const data = await result.json();
+        let totalPages = data.totalPages;
 
         const tbody = document.querySelector("#studentTableBody");
         tbody.innerHTML = "";
 
-        data.forEach((student) => {
+        data.studentsData.forEach((student) => {
           tbody.innerHTML += `
                 <tr>
             <td>
@@ -294,8 +301,51 @@
           </tr>
                 `;
         });
+
+        renderPagination(totalPages);
       }
       fetchStudents();
+
+      async function renderPagination(totalPages) {
+        const container = document.querySelector("#pagination");
+        container.innerHTML = "";
+
+        //previous button
+        let prevLi = document.createElement("li");
+        prevLi.innerHTML = `<a class="page-link " href="#">Previous</a>`;
+        let asdf0 = currentPage === 1 ? "page-item disabled" : "page-item";
+        prevLi.className = asdf0;
+        prevLi.addEventListener("click", (e) => {
+          e.preventDefault();
+          fetchStudents(currentSearch, currentPage - 1);
+        });
+        container.appendChild(prevLi);
+
+        //Paginaton buttons in numbers
+        for (let i = 1; i <= totalPages; i++) {
+          let li = document.createElement("li");
+          li.innerHTML = `<a class="page-link " href="#">${i}</a>`;
+          let asdf = i === currentPage ? "page-item active" : "page-item";
+          li.className = asdf;
+          li.addEventListener("click", (e) => {
+            e.preventDefault();
+            fetchStudents(currentSearch, i);
+          });
+          container.appendChild(li);
+        }
+
+        //next Button
+        let nextli = document.createElement("li");
+        nextli.innerHTML = `<a class="page-link " href="#">Next</a>`;
+        let asdf2 =
+          currentPage === totalPages ? "page-item disabled" : "page-item";
+        nextli.className = asdf2;
+        nextli.addEventListener("click", (e) => {
+          e.preventDefault();
+          fetchStudents(currentSearch, currentPage + 1);
+        });
+        container.appendChild(nextli);
+      }
 
       //Fetch single student from the API
       async function viewStudent(id) {
@@ -319,6 +369,75 @@
       document.querySelector("#searchInput").addEventListener("input", () => {
         fetchStudents(document.querySelector("#searchInput").value);
       });
+
+      //Add new student
+      document
+        .querySelector("#addStudentModal")
+        .addEventListener("submit", async (e) => {
+          e.preventDefault();
+          const formData = new FormData(e.target);
+
+          const response = await fetch(apiURL, {
+            method: "POST",
+            body: formData,
+          });
+
+          if (response.ok) {
+            e.target.reset();
+            bootstrap.Modal.getInstance(
+              document.querySelector("#addStudentModal")
+            ).hide();
+            fetchStudents();
+          } else {
+            alert("Error creating student");
+          }
+        });
+
+      //Delete student
+      async function deleteStudent(id) {
+        if (confirm("are you sure to delete this student")) {
+          await fetch(`${apiURL}/${id}`, { method: "DELETE" });
+          fetchStudents();
+        } else {
+          return;
+        }
+      }
+
+      //Update Student Modal box
+      async function editStudent(id) {
+        const result = await fetch(`${apiURL}/${id}`);
+        const student = await result.json();
+
+        document.querySelector("#editStudentId").value = student._id;
+        document.querySelector("#editFirstName").value = student.first_name;
+        document.querySelector("#editLastName").value = student.last_name;
+        document.querySelector("#editEmail").value = student.email;
+        document.querySelector("#editPhone").value = student.phone;
+        document.querySelector("#editGender").value = student.gender;
+
+        new bootstrap.Modal(document.getElementById("editStudentModal")).show();
+      }
+
+      document
+        .querySelector("#editStudentModal")
+        .addEventListener("submit", async (e) => {
+          e.preventDefault();
+          const formData = new FormData(e.target);
+
+          const response = await fetch(`${apiURL}/${e.target.id.value}`, {
+            method: "PUT",
+            body: formData,
+          });
+
+          if (response.ok) {
+            bootstrap.Modal.getInstance(
+              document.querySelector("#editStudentModal")
+            ).hide();
+            fetchStudents();
+          } else {
+            alert("Error Updating student");
+          }
+        });
     </script>
   </body>
 </html>

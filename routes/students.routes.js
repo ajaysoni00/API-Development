@@ -31,7 +31,7 @@ const uploads = multer({
   },
 });
 
-// Get all Students (search only by first_name + last_name)
+// Get all Students
 router.get("/", async (req, res) => {
   try {
     const search = req.query.search?.trim() || "";
@@ -58,9 +58,18 @@ router.get("/", async (req, res) => {
         };
       }
     }
-
-    const studentsData = await Student.find(query);
-    res.json(studentsData);
+    const page = parseInt(req.query.page) || 1;
+    const limit = parseInt(req.query.limit) || 8;
+    let totalDoc = await Student.countDocuments(query);
+    let skip = (page - 1) * limit;
+    const studentsData = await Student.find(query).skip(skip).limit(limit);
+    res.json({
+      page,
+      totalPages: Math.ceil(totalDoc / limit),
+      totalDoc,
+      limit,
+      studentsData,
+    });
   } catch (error) {
     res.status(500).json({ message: error.message });
   }
