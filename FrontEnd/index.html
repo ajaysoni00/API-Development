@@ -313,12 +313,15 @@
         //previous button
         let prevLi = document.createElement("li");
         prevLi.innerHTML = `<a class="page-link " href="#">Previous</a>`;
-        let asdf0 = currentPage === 1 ? "page-item disabled" : "page-item";
-        prevLi.className = asdf0;
-        prevLi.addEventListener("click", (e) => {
-          e.preventDefault();
-          fetchStudents(currentSearch, currentPage - 1);
-        });
+        if (currentPage === 1) {
+          prevLi.className = "disabled page-item";
+        } else {
+          prevLi.className = "page-item";
+          prevLi.addEventListener("click", (e) => {
+            e.preventDefault();
+            fetchStudents(currentSearch, currentPage - 1);
+          });
+        }
         container.appendChild(prevLi);
 
         //Paginaton buttons in numbers
@@ -335,15 +338,18 @@
         }
 
         //next Button
+
         let nextli = document.createElement("li");
         nextli.innerHTML = `<a class="page-link " href="#">Next</a>`;
-        let asdf2 =
-          currentPage === totalPages ? "page-item disabled" : "page-item";
-        nextli.className = asdf2;
-        nextli.addEventListener("click", (e) => {
-          e.preventDefault();
-          fetchStudents(currentSearch, currentPage + 1);
-        });
+        if (currentPage === totalPages) {
+          nextli.className = "page-item disabled";
+        } else {
+          nextli.className = "page-item";
+          nextli.addEventListener("click", (e) => {
+            e.preventDefault();
+            fetchStudents(currentSearch, currentPage + 1);
+          });
+        }
         container.appendChild(nextli);
       }
 
