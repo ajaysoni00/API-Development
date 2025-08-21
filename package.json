@@ -7,9 +7,9 @@
     "start": "nodemon index.js"
   },
   "keywords": [],
-  "author": "",
+  "author": "Ajay_Soni",
   "license": "ISC",
-  "description": "",
+  "description": "A simple CRUD app with authentication",
   "dependencies": {
     "bcryptjs": "^3.0.2",
     "cors": "^2.8.5",
