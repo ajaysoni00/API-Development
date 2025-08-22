@@ -6,10 +6,18 @@ import auth from "./middlewares/auth.js";
 import connectDB from "./config/database.js";
 import cors from "cors";
 import { MulterError } from "multer";
+import rateLimiter from "express-rate-limit";
+import helmet from "helmet";
 
 connectDB();
 
 const port = process.env.PORT;
+
+const limiter = rateLimiter({
+  windowMs: 1000 * 60,
+  max: 5,
+  message: "Too many request from IP, please try again later!",
+});
 
 app.set("view engine", "ejs");
 app.use(express.urlencoded({ extended: false }));
@@ -17,6 +25,9 @@ app.use(express.json());
 app.use("/uploads", express.static("uploads"));
 
 app.use(cors());
+
+app.use(limiter);
+app.use(helmet());
 
 app.use("/api/user", userRoutes);
 
